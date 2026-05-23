@@ -1,0 +1,24 @@
+name: Stock Scraper
+on:
+  schedule:
+    - cron: '0 23 * * *'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions: contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with: {python-version: '3.10'}
+      - run: pip install yfinance pandas
+      - name: Run Script
+        run: python stock_trading/stock_scraper.py
+      - name: Commit
+        run: |
+          git config user.name 'github-actions'
+          git config user.email 'github-actions@github.com'
+          git add stock_trading/*.csv
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update stock data" && git push)
