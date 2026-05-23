@@ -1,24 +1,34 @@
-name: Stock Scraper
+name: Daily Stock Scraper
+
 on:
   schedule:
-    - cron: '0 23 * * *'
-  workflow_dispatch:
+    - cron: '0 23 * * *' # Runs at 23:00 UTC daily
+  workflow_dispatch:      # Allows you to click "Run workflow" manually
+
+permissions:
+  contents: write         # Required to push the updated CSVs back to your repo
 
 jobs:
-  build:
+  update-data:
     runs-on: ubuntu-latest
-    permissions: contents: write
     steps:
-      - uses: actions/checkout@v4
-      - name: Setup Python
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
         uses: actions/setup-python@v5
-        with: {python-version: '3.10'}
-      - run: pip install yfinance pandas
-      - name: Run Script
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: pip install yfinance pandas
+
+      - name: Run Scraper
         run: python stock_trading/stock_scraper.py
-      - name: Commit
+
+      - name: Commit and Push
         run: |
           git config user.name 'github-actions'
           git config user.email 'github-actions@github.com'
           git add stock_trading/*.csv
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Update stock data" && git push)
+          git diff --quiet && git diff --staged --quiet || (git commit -m "data: update stock csv files" && git push)
